@@ -14,3 +14,10 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+button{
+  font-family: monospace;
+}
+.git_link{
+  color: grey;
+  font-size: 13px;
+}
