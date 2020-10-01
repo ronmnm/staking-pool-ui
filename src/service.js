@@ -1,76 +1,84 @@
 import web3 from "./web3"
 import poolAbi from "./abi/poolAbi.json"
 import worklockAbi from "./abi/worklockAbi.json"
+import escrowAbi from "./abi/escrowAbi.json"
 
-function fromWei(_value) {
+const POOL_ADDRESS = "0xB8Ff313d33b0E841b6B83243F6e2935166de87C1"
+const WL_ADDRESS = "0xe9778E69a961e64d3cdBB34CF6778281d34667c2"
+const DISPATCHER_ADDRESS = "0xbbD3C0C794F40c4f993B03F65343aCC6fcfCb2e2"
+
+function _fromWei(_value) {
   let res = web3.utils.fromWei(_value, "ether")
   return Number(res)
 }
 
 export async function getData(_account) {
-  let poolContractInstance
-  let worklockContractInstance
-  let account
-  if (web3) {
-    poolContractInstance = new web3.eth.Contract(
-      poolAbi,
-      "0xB8Ff313d33b0E841b6B83243F6e2935166de87C1"
-    )
+  let PoolContract = new web3.eth.Contract(poolAbi, POOL_ADDRESS)
+  let WLContract = new web3.eth.Contract(worklockAbi, WL_ADDRESS)
+  let EscrowContract = new web3.eth.Contract(escrowAbi, DISPATCHER_ADDRESS)
 
-    worklockContractInstance = new web3.eth.Contract(
-      worklockAbi,
-      "0xe9778E69a961e64d3cdBB34CF6778281d34667c2"
-    )
-
-    account = (await web3.eth.getAccounts())[0]
-  } else {
-    return null
-  }
+  let account = (await web3.eth.getAccounts())[0]
+  let data = {}
 
   if (_account) {
     account = _account
   }
 
-  let data = {}
   try {
-    // Locked ETH in WL
-    let totalLockedInMainContractWei = await web3.eth.getBalance(
-      "0xe9778E69a961e64d3cdBB34CF6778281d34667c2"
-    )
-    data.totalLockedInMainContractETH = fromWei(totalLockedInMainContractWei)
+    data.POOL_ESCROWED_ETH = 3182.0955
+    data.POOL_TOKEN_ALLOCATION = 1814414.144
+    data.NU_PER_ETH = data.POOL_TOKEN_ALLOCATION / data.POOL_ESCROWED_ETH
+    data.TOTAL_ETH_LOCKED_WL = 353913.645
 
-    // Locked ETH through pool
-    let totalLockedWei = await poolContractInstance.methods.totalWorkLockETHReceived().call()
-    data.totalLockedETH = fromWei(totalLockedWei)
+    // web3.eth.getBalance(WL_ADDRESS).then(res => {
+    //   data.totalLockedInMainContractETH = _fromWei(res)
+    // })
 
-    let nuNitsAllocation = await worklockContractInstance.methods.ethToTokens(totalLockedWei).call()
-    data.ethToTokens = Math.round(fromWei(nuNitsAllocation))
-
-    let poolAvailableRefund = await worklockContractInstance.methods
-      .getAvailableRefund("0xB8Ff313d33b0E841b6B83243F6e2935166de87C1")
+    PoolContract.methods
+      .totalWorkLockETHRefunded()
       .call()
-    data.poolAvailableRefund = fromWei(poolAvailableRefund)
+      .then(res => {
+        data.poolRefundedETH = _fromWei(res)
+      })
+    WLContract.methods
+      .getAvailableRefund(POOL_ADDRESS)
+      .call()
+      .then(res => {
+        data.poolAvailableRefund = _fromWei(res)
+      })
+
     // console.log("poolAvailableRefund", poolAvailableRefund)
-    data.workInfo = await worklockContractInstance.methods
-      .workInfo("0xB8Ff313d33b0E841b6B83243F6e2935166de87C1")
-      .call()
+    data.workInfo = await WLContract.methods.workInfo(POOL_ADDRESS).call()
+
+    // const subStakesLength = await EscrowContract.methods.subStakesLength(account).call()
+
+    // const getAllSubstakes = await (async () => {
+    //   if (subStakesLength !== "0") {
+    //     let substakeList = []
+    //     for (let i = 0; i < subStakesLength; i++) {
+    //       let list = await EscrowContract.methods.getSubStakeInfo(POOL_CONTRACT_ADDRESS, i).call()
+    //       list.id = i.toString()
+    //       substakeList.push(list)
+    //     }
+    //     return substakeList
+    //   } else {
+    //     let substakeList = null
+    //     return substakeList
+    //   }
+    // })()
 
     // participant data
     if (account) {
-      let participantData = await poolContractInstance.methods.delegators(account).call()
-      let availableRefund = await poolContractInstance.methods.getAvailableRefund(account).call()
-      data.participantDepositedETH = fromWei(participantData.depositedETHWorkLock)
+      let participantData = await PoolContract.methods.delegators(account).call()
+      let availableRefund = await PoolContract.methods.getAvailableRefund(account).call()
+      data.participantDepositedETH = _fromWei(participantData.depositedETHWorkLock)
 
-      let participantAllocatedNuNits = (data.ethToTokens / data.totalLockedETH).toFixed(2)
+      data.participantAllocatedNu = data.NU_PER_ETH * data.participantDepositedETH
 
-      data.participantAllocatedNu = (
-        participantAllocatedNuNits * data.participantDepositedETH
-      ).toLocaleString("en-US")
-
-      data.depositedTokens = fromWei(participantData.depositedTokens)
-      data.refundedETHWorkLock = fromWei(participantData.refundedETHWorkLock)
-      console.log("data.refundedETHWorkLock", data.refundedETHWorkLock)
-      data.availableRefund = fromWei(availableRefund)
+      data.depositedTokens = _fromWei(participantData.depositedTokens)
+      data.refundedETHWorkLock = _fromWei(participantData.refundedETHWorkLock)
+      // console.log("data.refundedETHWorkLock", data.refundedETHWorkLock)
+      data.availableRefund = _fromWei(availableRefund)
 
       // console.log(participantData)
     }
