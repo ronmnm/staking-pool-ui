@@ -16,7 +16,7 @@ let MainStyled = styled.div`
 
 export default function Main({ data, setData, account }) {
   let [inputAddress, setAddress] = useState(null)
-  let [customAccount, setCustomAccount] = useState("")
+  let [customAccount, setCustomAccount] = useState(null)
   function getDataClick(_account) {
     if (web3.utils.isAddress(_account)) {
       setCustomAccount(_account)
@@ -36,6 +36,7 @@ export default function Main({ data, setData, account }) {
           inputAddress={inputAddress}
           customAccount={customAccount}
           account={account}
+          getDataClick={getDataClick}
         />
       </MainStyled>
     )

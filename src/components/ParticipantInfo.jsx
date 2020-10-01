@@ -30,21 +30,19 @@ export default function ParticipantInfo({
           setAddress={setAddress}
         />
       </div>
-
-      <p>
-        Delegator:{" "}
-        {customAccount ? (
-          <span>
-            {customAccount.slice(0, 6)}...{customAccount.slice(38, 42)}
-          </span>
-        ) : (
-          <span>
-            {account && account.slice(0, 6)}...{account.slice(38, 42)}
-          </span>
-        )}
-      </p>
       {data.participantDepositedETH && (
         <>
+          <p>
+            Delegator:{" "}
+            {customAccount ? (
+              <span>
+                {customAccount && customAccount.slice(0, 6)}...{customAccount.slice(38, 42)}
+              </span>
+            ) : (
+              <span>{account ? `${account.slice(0, 6)}...${account.slice(38, 42)}` : null}</span>
+            )}
+          </p>
+
           <div>
             Your WL escrow: <span>{data.participantDepositedETH}</span> ETH{" "}
             <span style={{ color: "#969696" }}>

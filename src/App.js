@@ -19,6 +19,7 @@ function App() {
         // console.log("connected")
       }
     })()
+    console.log("effect")
     getData().then(data => {
       setData(data)
     })

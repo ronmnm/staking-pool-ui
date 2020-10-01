@@ -26,4 +26,4 @@ yarn-error.log*
 .firebaserc
 firebase.json
 /.firebase
-
+src/secrets.json

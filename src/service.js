@@ -18,6 +18,7 @@ export async function getData(_account) {
   let EscrowContract = new web3.eth.Contract(escrowAbi, DISPATCHER_ADDRESS)
 
   let account = (await web3.eth.getAccounts())[0]
+  // console.log("account", account)
   let data = {}
 
   if (_account) {
@@ -30,25 +31,25 @@ export async function getData(_account) {
     data.NU_PER_ETH = data.POOL_TOKEN_ALLOCATION / data.POOL_ESCROWED_ETH
     data.TOTAL_ETH_LOCKED_WL = 353913.645
 
-    // web3.eth.getBalance(WL_ADDRESS).then(res => {
-    //   data.totalLockedInMainContractETH = _fromWei(res)
-    // })
+    try {
+      let poolRefundedETH = await PoolContract.methods.totalWorkLockETHRefunded().call()
+      data.poolRefundedETH = _fromWei(poolRefundedETH)
+    } catch (err) {
+      console.log("poolRefundedETH", err)
+    }
 
-    PoolContract.methods
-      .totalWorkLockETHRefunded()
-      .call()
-      .then(res => {
-        data.poolRefundedETH = _fromWei(res)
-      })
-    WLContract.methods
-      .getAvailableRefund(POOL_ADDRESS)
-      .call()
-      .then(res => {
-        data.poolAvailableRefund = _fromWei(res)
-      })
+    try {
+      let poolAvailableRefund = await WLContract.methods.getAvailableRefund(POOL_ADDRESS).call()
+      data.poolAvailableRefund = _fromWei(poolAvailableRefund)
+    } catch (err) {
+      console.log("poolAvailableRefund", err)
+    }
 
-    // console.log("poolAvailableRefund", poolAvailableRefund)
-    data.workInfo = await WLContract.methods.workInfo(POOL_ADDRESS).call()
+    try {
+      data.workInfo = await WLContract.methods.workInfo(POOL_ADDRESS).call()
+    } catch (err) {
+      console.log("workInfo", err)
+    }
 
     // const subStakesLength = await EscrowContract.methods.subStakesLength(account).call()
 
@@ -85,6 +86,6 @@ export async function getData(_account) {
 
     return data
   } catch (error) {
-    console.error(error)
+    console.error("this is error", error)
   }
 }
