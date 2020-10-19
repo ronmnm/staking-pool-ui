@@ -26,8 +26,22 @@ let ButtonS = styled.button`
         outline: none;
       }
     `}
+  ${({ loading }) =>
+    loading &&
+    css`
+      pointer-events: none;
+      cursor: default;
+      div{
+        color: "black";
+      }
+      
+    `}
 `
 
-export default function ButtonStyled({ active, children }) {
-  return <ButtonS active={active}>{children}</ButtonS>
+export default function ButtonStyled({ active, loading, children, ...params }) {
+  return (
+    <ButtonS {...params} loading={loading} active={active}>
+      {!!loading ? <div>Loading...</div> : children}
+    </ButtonS>
+  )
 }

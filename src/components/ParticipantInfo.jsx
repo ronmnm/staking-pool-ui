@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react"
 import styled, { css } from "styled-components"
+import { refundFromPool } from "../service.js"
 import ButtonStyled from "./Button.jsx"
 import Controls from "./controls.jsx"
 import InputField from "./inputField"
@@ -19,7 +20,14 @@ export default function ParticipantInfo({
   customAccount,
   account,
 }) {
+  let [loading, setLoading] = useState(0)
   let poolRefund = data.poolAvailableRefund.toLocaleString("en-US")
+
+  async function handlePoolRefundClick() {
+    setLoading(1)
+    await refundFromPool()
+    setLoading(0)
+  }
   return (
     <ParticipantInfoStyled>
       <p>Delegator info (to view your personal data connect a wallet or enter address manually):</p>
@@ -54,8 +62,15 @@ export default function ParticipantInfo({
             Your available WL refund: <span>{data.availableRefund.toLocaleString("en-US")}</span>{" "}
             ETH{" "}
             <span style={{ color: "#969696" }}>
+              <br />
               (Pool available refund: <span>{poolRefund}</span> ETH, Withdraw to pool{" "}
-              <ButtonStyled active={true}>Refund: {poolRefund} ETH</ButtonStyled>)
+              <ButtonStyled
+                loading={loading}
+                onClick={handlePoolRefundClick}
+                active={+poolRefund > 0}>
+                Refund: {poolRefund} ETH
+              </ButtonStyled>
+              )
             </span>
           </div>
           <br />

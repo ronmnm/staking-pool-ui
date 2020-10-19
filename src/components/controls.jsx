@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react"
 import styled from "styled-components"
 import ButtonStyled from "./Button"
+import {refundForParticipant} from '../service'
 
 let ControlsStyled = styled.div`
   margin-top: 30px;
@@ -12,6 +13,14 @@ let ControlsStyled = styled.div`
 
 export default function Controls({ availableRefund, account, customAccount }) {
   let [buttonActive, setButtonActive] = useState(false)
+  let [refundActive, setRefundActive] = useState(0)
+
+
+  async function refund(){
+    setRefundActive(1)
+    await refundForParticipant()
+    setRefundActive(0)
+  }
 
   // console.log(customAccount)
   useEffect(() => {
@@ -26,18 +35,18 @@ export default function Controls({ availableRefund, account, customAccount }) {
   return (
     <ControlsStyled>
       <div>
-        <ButtonStyled active={buttonActive && Number(availableRefund) > 0}>
+        <ButtonStyled loading={refundActive} active={buttonActive && Number(availableRefund) > 0} onClick={refund}>
           Refund: {availableRefund.toLocaleString("en-US")} ETH
         </ButtonStyled>
       </div>
       <div>
-        <ButtonStyled active={buttonActive && Number(availableRefund) > 0}>
-          Withdraw Reward: {availableRefund.toLocaleString("en-US")} NU
+        <ButtonStyled active={false}>
+          Withdraw Reward: {0} NU
         </ButtonStyled>
       </div>
       <div>
         <ButtonStyled active={false}>
-          Withdraw All Stake: {availableRefund.toLocaleString("en-US")} NU
+          Withdraw All Stake: {0} NU
         </ButtonStyled>
       </div>
     </ControlsStyled>
