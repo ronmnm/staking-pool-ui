@@ -1,8 +1,8 @@
 import React from "react"
 import styled from "styled-components"
 
-let InputFiedStyled = styled.div`
-  button {
+export const InputFieldStyled = styled.div`
+  .button_styles {
     cursor: pointer;
     height: 30px;
     width: 100px;
@@ -43,14 +43,14 @@ let InputFiedStyled = styled.div`
 
 export default function InputField({ inputAddress, getDataClick, setAddress }) {
   return (
-    <InputFiedStyled>
+    <InputFieldStyled>
       <input
         placeholder="0x..."
         value={inputAddress || ""}
         onChange={e => setAddress(e.target.value)}
         type="text"
       />
-      <button onClick={() => getDataClick(inputAddress)}>Query</button>
-    </InputFiedStyled>
+      <button className="button_styles" onClick={() => getDataClick(inputAddress)}>Query</button>
+    </InputFieldStyled>
   )
 }

@@ -4,10 +4,11 @@ body {
   color: #61dafb;
   font-weight: 600;
   margin: 40px auto;
-  width: 70%;
+  width: 80%;
   font-family: 'Courier Prime', monospace;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-size: 14px;
 }
 
 code {

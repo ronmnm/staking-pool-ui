@@ -38,7 +38,7 @@ export default function ParticipantInfo({
           setAddress={setAddress}
         />
       </div>
-      {data.participantDepositedETH && (
+      {data.isAccountPresent && (
         <>
           <p>
             Delegator:{" "}
@@ -83,6 +83,7 @@ export default function ParticipantInfo({
           </div>
 
           <Controls
+            data={data}
             availableRefund={data.availableRefund}
             account={account}
             customAccount={customAccount}

@@ -2,14 +2,17 @@ import web3 from "./web3"
 import poolAbi from "./abi/poolAbi.json"
 import worklockAbi from "./abi/worklockAbi.json"
 import escrowAbi from "./abi/escrowAbi.json"
+import tokenAbi from "./abi/tokenAbi.json"
 
 const POOL_ADDRESS = "0xB8Ff313d33b0E841b6B83243F6e2935166de87C1"
 const WL_ADDRESS = "0xe9778E69a961e64d3cdBB34CF6778281d34667c2"
 const DISPATCHER_ADDRESS = "0xbbD3C0C794F40c4f993B03F65343aCC6fcfCb2e2"
+const TOKEN_ADDRESS = "0x4fe83213d56308330ec302a8bd641f1d0113a4cc"
 
 let PoolContract = new web3.eth.Contract(poolAbi, POOL_ADDRESS)
 let WLContract = new web3.eth.Contract(worklockAbi, WL_ADDRESS)
 let EscrowContract = new web3.eth.Contract(escrowAbi, DISPATCHER_ADDRESS)
+let Token = new web3.eth.Contract(tokenAbi, TOKEN_ADDRESS)
 
 function _fromWei(_value) {
   let res = web3.utils.fromWei(_value, "ether")
@@ -21,7 +24,7 @@ export async function refundFromPool() {
   if (account) {
     try {
       await PoolContract.methods.refund().send({
-        from: account
+        from: account,
       })
     } catch (error) {
       console.error("this is errrrror!", error)
@@ -36,13 +39,38 @@ export async function refundForParticipant() {
   if (account) {
     try {
       await PoolContract.methods.withdrawRefund().send({
-        from: account
+        from: account,
       })
     } catch (error) {
       console.error("this is errrrror!", error)
     }
   } else {
     alert("Please connect metamask first")
+  }
+}
+
+export async function stake(_value) {
+  let account = window.ethereum.selectedAddress
+  let amountToDeposit = web3.utils.toWei(_value, "ether")
+
+  let allowance = await Token.methods
+    .allowance(account, "0xB8Ff313d33b0E841b6B83243F6e2935166de87C1")
+    .call()
+
+  if (allowance < amountToDeposit) {
+    try {
+      await Token.methods
+        .increaseAllowance("0xB8Ff313d33b0E841b6B83243F6e2935166de87C1", amountToDeposit)
+        .send({ from: account })
+    } catch (error) {
+      console.log("this is ERRR", error)
+      return
+    }
+  }
+  try {
+    await PoolContract.methods.depositTokens(amountToDeposit).send({ from: account })
+  } catch (error) {
+    console.log(error)
   }
 }
 
@@ -100,8 +128,12 @@ export async function getData(_account) {
 
     // participant data
     if (account) {
+      let nuBalance = await Token.methods.balanceOf(account).call()
       let participantData = await PoolContract.methods.delegators(account).call()
       let availableRefund = await PoolContract.methods.getAvailableRefund(account).call()
+
+      data.nuBalance = _fromWei(nuBalance)
+
       data.participantDepositedETH = _fromWei(participantData.depositedETHWorkLock)
 
       data.participantAllocatedNu = data.NU_PER_ETH * data.participantDepositedETH
@@ -112,6 +144,7 @@ export async function getData(_account) {
       data.availableRefund = _fromWei(availableRefund)
 
       // console.log(participantData)
+      data.isAccountPresent = true
     }
 
     return data
